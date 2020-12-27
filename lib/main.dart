@@ -1,10 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'prompt.dart';
+import 'control.dart';
+import 'score.dart';
 
 void main() => runApp(BullsEyeApp());
 
 class BullsEyeApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
     return MaterialApp(
       title: 'BullsEye',
       theme: ThemeData(primarySwatch: Colors.blue),
@@ -30,11 +38,8 @@ class _GamePageState extends State<GamePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text(
-              'Welcome to my first app!',
-              style:
-                  TextStyle(fontWeight: FontWeight.bold, color: Colors.green),
-            ),
+            Prompt(targetValue: 100),
+            Control(),
             FlatButton(
               child: Text('Hit Me!', style: TextStyle(color: Colors.blue)),
               onPressed: () {
@@ -43,6 +48,7 @@ class _GamePageState extends State<GamePage> {
                 print("button pressed");
               },
             ),
+            Score(totalScore: 99999, round: 999),
           ],
         ),
       ),
