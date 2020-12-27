@@ -38,11 +38,16 @@ class _GamePageState extends State<GamePage> {
   @override
   void initState() {
     super.initState();
-    _model = GameModel(Random().nextInt(100) + 1);
+    _model = GameModel(_newTargetValue());
   }
 
   @override
   Widget build(BuildContext context) {
+    var score = Score(
+      totalScore: _model.totalScore,
+      round: _model.round,
+      onStartOver: _startNewGame,
+    );
     return Scaffold(
       body: Center(
         child: Column(
@@ -53,12 +58,11 @@ class _GamePageState extends State<GamePage> {
             FlatButton(
               child: Text('Hit Me!', style: TextStyle(color: Colors.blue)),
               onPressed: () {
-                this._alertIsVisible = true;
                 _showAlert(context);
-                print("button pressed");
+                this._alertIsVisible = true;
               },
             ),
-            Score(totalScore: _model.totalScore, round: _model.round),
+            score,
           ],
         ),
       ),
@@ -69,8 +73,25 @@ class _GamePageState extends State<GamePage> {
 
   int _pointsForCurrentRound() {
     var maximumScore = 100;
-    var difference = (_model.target - _sliderValue()).abs();
-    return maximumScore - difference;
+    var difference = _amountOff();
+    var bonus = 0;
+    if (difference == 0) {
+      bonus = 100;
+    } else if (difference == 1) {
+      bonus = 50;
+    }
+    return maximumScore - difference + bonus;
+  }
+
+  int _newTargetValue() => Random().nextInt(100) + 1;
+
+  void _startNewGame() {
+    setState(() {
+      _model.totalScore = GameModel.SCORE_START;
+      _model.round = GameModel.ROUND_START;
+      _model.target = _newTargetValue();
+      _model.current = GameModel.SCORE_START;
+    });
   }
 
   void _showAlert(BuildContext context) {
@@ -79,14 +100,18 @@ class _GamePageState extends State<GamePage> {
       onPressed: () {
         Navigator.of(context).pop();
         this._alertIsVisible = false;
-        print("Awesome pressed! $_alertIsVisible");
+        setState(() {
+          _model.totalScore += _pointsForCurrentRound();
+          _model.target = _newTargetValue();
+          _model.round += 1;
+        });
       },
     );
     showDialog(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: Text("Hello There"),
+            title: Text(_alertTitle()),
             content: Text("The slider's value is ${_sliderValue()}.\n" +
                 "You scored ${_pointsForCurrentRound()} points this round."),
             actions: <Widget>[
@@ -95,5 +120,24 @@ class _GamePageState extends State<GamePage> {
             elevation: 5,
           );
         });
+  }
+
+  int _amountOff() => (_model.target - _sliderValue()).abs();
+
+  String _alertTitle() {
+    var difference = _amountOff();
+
+    String title;
+
+    if (difference == 0) {
+      title = "Perfect!";
+    } else if (difference < 5) {
+      title = "You almost had it!";
+    } else if (difference <= 10) {
+      title = "Not bad!";
+    } else {
+      title = "Are you even trying?";
+    }
+    return title;
   }
 }
